@@ -3,6 +3,7 @@
 -- Exercici 1
 
 -- Eliminar objetos existentes (opcional)
+/*
 BEGIN
    EXECUTE IMMEDIATE 'DROP TABLE tab_comanda';
    EXECUTE IMMEDIATE 'DROP TABLE tab_client';
@@ -18,6 +19,8 @@ EXCEPTION
    WHEN OTHERS THEN NULL; -- Ignorar errores si los objetos no existen
 END;
 /
+*/
+
 
 -- Definir el tipus TELÈFON
 CREATE TYPE Telefon AS OBJECT (
@@ -101,7 +104,7 @@ END;
 -- Crear les taules d'objectes
 CREATE TABLE tab_producte OF PRODUCTE (
     PRIMARY KEY (codi)
-);
+)NOT FINAL;
 /
 
 CREATE TABLE tab_client OF CLIENT (
@@ -122,9 +125,17 @@ INSERT INTO tab_producte VALUES (PRODUCTE(3, 'Teclat', 'Teclat mecànic', 80.00)
 /
 
 -- Inserir clients
-INSERT INTO tab_client VALUES (CLIENT('C001', 'Joan Pérez', 'Carrer Major 12', vec_telefon(Telefon('Mòbil', '666111222')), 'joan@email.com'));
-INSERT INTO tab_client VALUES (CLIENT('C002', 'Maria López', 'Avinguda Catalunya 34', vec_telefon(Telefon('Fix', '931234567')), 'maria@email.com'));
+INSERT INTO tab_client VALUES (
+    CLIENT('C001', 'Joan Pérez', 'Carrer Major 12', 
+           vec_telefon(Telefon('Mòbil', '666111222')), 'joan@email.com')
+);
+
+INSERT INTO tab_client VALUES (
+    CLIENT('C002', 'Maria López', 'Avinguda Catalunya 34', 
+           vec_telefon(Telefon('Fix', '931234567')), 'maria@email.com')
+);
 /
+
 
 -- Inserir comanda amb PL/SQL
 DECLARE
@@ -151,32 +162,14 @@ BEGIN
 END;
 /
 
-
--- Consultar el total d'una comanda
-SELECT c.codi, c.data_comanda, TREAT(VALUE(c) AS COMANDA).calcular_import_total() AS total
-FROM tab_comanda c;
-/
-
--- Verificar les línies de la comanda i altres tablas creadas.
-SELECT * FROM tab_comanda;
-/
-
-SELECT * FROM tab_client;
-/
-
 SELECT * FROM tab_producte;
 /
+-- Consultar clientes con los números de teléfono desglosados
+SELECT c.codi, c.nom, c.adreça, t.tipus, t.numero, c.correu_elect
+FROM tab_client c, TABLE(c.telefons) t;
 
--- Consultar línies de comanda correctament
-SELECT l.*
-FROM tab_comanda c, TABLE(c.tab_linies) l;
-/
 
-SELECT c.codi, l.codi AS linia_id, p.nom AS producte, l.unitats
-FROM tab_comanda c, TABLE(c.tab_linies) l
-JOIN tab_producte p ON l.ref_producte = REF(p);
-/
-
-SELECT * FROM DBA_SYS_PRIVS WHERE GRANTEE = 'SYSTEM';
+/*
+SELECT * FROM DBA_SYS_PRIVS WHERE GRANTEE = 'SYSTEM';*/
 
 
