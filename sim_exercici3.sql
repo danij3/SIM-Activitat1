@@ -1,6 +1,36 @@
 --1. Definiu en primer lloc tots els "type" necessaris amb CREATE OR REPLACE TYPE
 --• Definiu un type per cada classe
+/*BEGIN
+   EXECUTE IMMEDIATE 'DROP TYPE Analista';
+   EXECUTE IMMEDIATE 'DROP TYPE Client';
+   EXECUTE IMMEDIATE 'DROP TYPE Dirigeix';
+   EXECUTE IMMEDIATE 'DROP TYPE Empleat';
+   EXECUTE IMMEDIATE 'DROP TYPE Fase';
+   EXECUTE IMMEDIATE 'DROP TYPE FasesProj';
+   EXECUTE IMMEDIATE 'DROP TYPE Programador';
+   EXECUTE IMMEDIATE 'DROP TYPE ProjDesenv';
+   EXECUTE IMMEDIATE 'DROP TYPE Projecte';
+   EXECUTE IMMEDIATE 'DROP TYPE ProjEstudi';
+   EXECUTE IMMEDIATE 'DROP TYPE Tecnic';
+   EXECUTE IMMEDIATE 'DROP TYPE Treballa';
+    EXECUTE IMMEDIATE 'DROP TABLE analistes';
+    EXECUTE IMMEDIATE 'DROP TABLE clientes';
+    EXECUTE IMMEDIATE 'DROP TABLE dirigeixen';
+    EXECUTE IMMEDIATE 'DROP TABLE empleats';
+    EXECUTE IMMEDIATE 'DROP TABLE fases';
+    EXECUTE IMMEDIATE 'DROP TABLE fasesprojecte';
+    EXECUTE IMMEDIATE 'DROP TABLE programadors';
+    EXECUTE IMMEDIATE 'DROP TABLE projectes';
+    EXECUTE IMMEDIATE 'DROP TABLE projectesdesenv';
+    EXECUTE IMMEDIATE 'DROP TABLE projectesestudi';
+    EXECUTE IMMEDIATE 'DROP TABLE tecnics';
+    EXECUTE IMMEDIATE 'DROP TABLE treballen';                      
 
+   
+EXCEPTION
+   WHEN OTHERS THEN NULL; -- Ignorar errores si los objetos no existen
+END;
+*/
 --Type Client:
 CREATE OR REPLACE TYPE Client AS OBJECT (
   nif char(9),
@@ -10,6 +40,7 @@ CREATE OR REPLACE TYPE Client AS OBJECT (
   telefon VARCHAR2(9),
   MEMBER FUNCTION numProj RETURN NUMBER
 ) NOT FINAL;
+/
 
 --Type Projecte:
 CREATE OR REPLACE TYPE Projecte AS OBJECT (
@@ -19,6 +50,7 @@ CREATE OR REPLACE TYPE Projecte AS OBJECT (
   nomclient REF Client,
   MEMBER FUNCTION director RETURN VARCHAR2
 ) NOT FINAL;
+/
 
 --Type Empleat:
 CREATE OR REPLACE TYPE Empleat AS OBJECT (
@@ -32,6 +64,7 @@ CREATE OR REPLACE TYPE Empleat AS OBJECT (
   MEMBER FUNCTION numProjTreb RETURN NUMERIC,
   MEMBER FUNCTION antiguitat RETURN NUMERIC
 ) NOT FINAL;
+/
 
 --Type ProjDesenv heredada de Projecte:
 CREATE OR REPLACE TYPE ProjDesenv UNDER Projecte (
@@ -39,6 +72,7 @@ CREATE OR REPLACE TYPE ProjDesenv UNDER Projecte (
   dataPrevistaFi DATE,
   MEMBER FUNCTION faseActual RETURN VARCHAR2
 );
+/
 
 --Type ProjEstudi heredada de Projecte:
 CREATE OR REPLACE TYPE ProjEstudi UNDER Projecte (
@@ -46,6 +80,7 @@ CREATE OR REPLACE TYPE ProjEstudi UNDER Projecte (
   termini NUMERIC(3),
   MEMBER FUNCTION acceptat RETURN CHAR --Revisar lo del char1
 );
+/
 
 --Type Fase
 CREATE OR REPLACE TYPE Fase AS OBJECT (
@@ -54,7 +89,7 @@ CREATE OR REPLACE TYPE Fase AS OBJECT (
   tipusEmp VARCHAR2(30),
   MEMBER FUNCTION numProj RETURN NUMBER
 ) NOT FINAL;
-
+/
 
 
 --• Implementeu també dos types per a les associacions Dirigeix i Treballa que inclouran referències a objectes de les classes Projecte i Empleat.
@@ -63,12 +98,15 @@ CREATE OR REPLACE TYPE Dirigeix AS OBJECT (
   refProjecte REF Projecte,
   refEmpleat REF Empleat
 ) NOT FINAL;
+/
 
 --Type Treballa
 CREATE OR REPLACE TYPE Treballa AS OBJECT (
   refProjecte REF Projecte,
   refEmpleat REF Empleat
 ) NOT FINAL;
+/
+
 --• Implementeu un type FasesProj que inclogui referències a ProjDesenv i Fase
 --Type FasesProj
 CREATE OR REPLACE TYPE FasesProj AS OBJECT (
@@ -77,6 +115,7 @@ CREATE OR REPLACE TYPE FasesProj AS OBJECT (
   refProjDesenv REF ProjDesenv,
   refFase REF Fase
 ) NOT FINAL;
+/
 
 --• Cal implementar l'herència entre les classes Projecte i Empleat, creant els subtipus necessaris.
 --Type Analista heredada de Empleat:
@@ -84,16 +123,19 @@ CREATE OR REPLACE TYPE Analista UNDER Empleat (
   dataInici DATE,
   despatx VARCHAR2(10)
 ) NOT FINAL;
+/
 
 --Type Programador heredada de Empleat:
 CREATE OR REPLACE TYPE Programador UNDER Empleat (
   llenguatge VARCHAR2(40)
 ) NOT FINAL;
+/
 
 --Type Tecnic heredada de Empleat:
 CREATE OR REPLACE TYPE Tecnic UNDER Empleat (
   titulacio VARCHAR2(40)
 ) NOT FINAL;
+/
 
 -- DEFINIR LOS METODOS ESTÁN HECHOS EN EL PUNTO 3!!
 -------------------------------------------------------------------------------------------------------------
@@ -140,33 +182,53 @@ CREATE TABLE fases OF Fase (
 CREATE TABLE dirigeixen OF Dirigeix;
 CREATE TABLE treballen OF Treballa;
 CREATE TABLE fasesprojecte OF FasesProj;
+
+
+
 --• Inseriu algunes files de dades en cada taula.
 INSERT INTO clientes VALUES (Client('123456789', 'Juan', 'Pérez', 'Carrer de la Pau 10', '987654321'));
+INSERT INTO clientes VALUES (Client('123587789', 'Lucas', 'Pérez', 'Carrer de la Pau 10', '987654321'));
 
-INSERT INTO projectes VALUES (Projecte(100442, 'Projecte B', 'Desenvolupament de software', (SELECT REF(C) FROM clientes c WHERE c.nif = '123456789')));
+INSERT INTO projectes VALUES (Projecte(100442, 'Projecte A', 'Desenvolupament de software', (SELECT REF(C) FROM clientes c WHERE c.nif = '123456789')));
+INSERT INTO projectes VALUES (Projecte(100443, 'Projecte B', 'Desenvolupament de software', (SELECT REF(C) FROM clientes c WHERE c.nif = '123587789')));
+INSERT INTO projectes VALUES (Projecte(100444, 'Projecte C', 'Desenvolupament de software', (SELECT REF(C) FROM clientes c WHERE c.nif = '123587789')));
 
 INSERT INTO empleats VALUES (Empleat('141111121', 'Lucas', 'Gonzalez', 'Carrer de la Vaca 15', '612345678', TO_DATE('2020-08-15', 'YYYY-MM-DD')));
+INSERT INTO empleats VALUES (Empleat('141111131', 'Marina', 'Gonzalez', 'Carrer de la Vaca 15', '612345678', TO_DATE('2020-05-15', 'YYYY-MM-DD')));
+INSERT INTO empleats VALUES (Empleat('141111132', 'Marina', 'Perez', 'Carrer de la Vaca 15', '612345678', TO_DATE('2020-05-15', 'YYYY-MM-DD')));
 
 INSERT INTO analistes VALUES (Analista('111111111', 'Carlos', 'Martínez', 'Carrer de la Vaca 15', '612345678', TO_DATE('2022-01-15', 'YYYY-MM-DD'), TO_DATE('2022-01-15', 'YYYY-MM-DD'), 'D001'));
+INSERT INTO analistes VALUES (Analista('111111113', 'Carlos', 'Perez', 'Carrer de la Vaca 15', '612345678', TO_DATE('2022-01-15', 'YYYY-MM-DD'), TO_DATE('2022-01-15', 'YYYY-MM-DD'), 'D003'));
+INSERT INTO analistes VALUES (Analista('111111114', 'Carlos', 'Gonzalez', 'Carrer de la Vaca 15', '612345678', TO_DATE('2022-01-15', 'YYYY-MM-DD'), TO_DATE('2022-01-15', 'YYYY-MM-DD'), 'D004'));
 
 INSERT INTO programadors VALUES (Programador('444444444', 'David', 'Sánchez', 'Carrer del Sol 25', '612345681', TO_DATE('2019-03-10', 'YYYY-MM-DD'), 'Java'));
+INSERT INTO programadors VALUES (Programador('444444443', 'Lucas', 'Sánchez', 'Carrer del Sol 25', '612345681', TO_DATE('2019-03-16', 'YYYY-MM-DD'), 'Python'));
 
 INSERT INTO tecnics VALUES (Tecnic('666666666', 'Jordi', 'Hernández', 'Carrer de la Rosa 11', '612345683', TO_DATE('2018-07-19', 'YYYY-MM-DD'), 'Enginyer en Informàtica'));
+INSERT INTO tecnics VALUES (Tecnic('666666663', 'Jordi', 'Perez', 'Carrer de la Rosa 11', '612345683', TO_DATE('2018-07-19', 'YYYY-MM-DD'), 'Enginyer en Bioinformàtica'));
 
-INSERT INTO projectesdesenv VALUES (ProjDesenv(100443, 'Projecte A', 'Desenvolupament de software', (SELECT REF(C) FROM clientes c WHERE c.nif = '123456789'), TO_DATE('2022-01-01', 'YYYY-MM-DD'), null));
+INSERT INTO projectesdesenv VALUES (ProjDesenv(100443, 'Projecte B', 'Desenvolupament de software', (SELECT REF(C) FROM clientes c WHERE c.nif = '123456789'), TO_DATE('2022-01-01', 'YYYY-MM-DD'), null));
+INSERT INTO projectesdesenv VALUES (ProjDesenv(100444, 'Projecte C', 'Desenvolupament de software', (SELECT REF(C) FROM clientes c WHERE c.nif = '123456789'), TO_DATE('2022-01-01', 'YYYY-MM-DD'), TO_DATE('2024-01-01', 'YYYY-MM-DD')));
 
-INSERT INTO projectesestudi VALUES (ProjEstudi(100442, 'Projecte B', 'Desenvolupament de software', (SELECT REF(C) FROM clientes c WHERE c.nif = '123456789'), 5000.00, 12));
+INSERT INTO projectesestudi VALUES (ProjEstudi(100443, 'Projecte B', 'Desenvolupament de software', (SELECT REF(C) FROM clientes c WHERE c.nif = '123456789'), 5000.00, 12));
+INSERT INTO projectesestudi VALUES (ProjEstudi(100444, 'Projecte C', 'Desenvolupament de software', (SELECT REF(C) FROM clientes c WHERE c.nif = '123456789'), 5000.00, 12));
 
+INSERT INTO fases VALUES (Fase(1, 'Planificacio', 'Analista'));
 INSERT INTO fases VALUES (Fase(2, 'Execució', 'Analista'));
 
-INSERT INTO dirigeixen VALUES (Dirigeix((SELECT REF(p) FROM projectes p WHERE p.idProjecte = 100441), (SELECT REF(e) FROM empleats e WHERE e.dni = '111111111')));
+INSERT INTO dirigeixen VALUES (Dirigeix((SELECT REF(p) FROM projectes p WHERE p.idProjecte = 100442), (SELECT REF(e) FROM empleats e WHERE e.dni = '111111111')));
+INSERT INTO dirigeixen VALUES (Dirigeix((SELECT REF(p) FROM projectes p WHERE p.idProjecte = 100443), (SELECT REF(e) FROM empleats e WHERE e.dni = '111111113')));
+INSERT INTO dirigeixen VALUES (Dirigeix((SELECT REF(p) FROM projectes p WHERE p.idProjecte = 100444), (SELECT REF(e) FROM empleats e WHERE e.dni = '111111113')));
 
-INSERT INTO treballen VALUES (Treballa((SELECT REF(p) FROM projectes p WHERE p.idProjecte = 1001), (SELECT REF(e) FROM empleats e WHERE e.dni = '111111111')));
+INSERT INTO treballen VALUES (Treballa((SELECT REF(p) FROM projectes p WHERE p.idProjecte = 100442), (SELECT REF(e) FROM empleats e WHERE e.dni = '111111111')));
+INSERT INTO treballen VALUES (Treballa((SELECT REF(p) FROM projectes p WHERE p.idProjecte = 100443), (SELECT REF(e) FROM empleats e WHERE e.dni = '111111114')));
+INSERT INTO treballen VALUES (Treballa((SELECT REF(p) FROM projectes p WHERE p.idProjecte = 100444), (SELECT REF(e) FROM empleats e WHERE e.dni = '111111114')));
 
+INSERT INTO fasesprojecte VALUES (FasesProj(TO_DATE('2022-01-01', 'YYYY-MM-DD'), null,(SELECT REF(pd) FROM projectesdesenv pd WHERE pd.idProjecte = 100442), (SELECT REF(f) FROM fases f WHERE f.idFase = 1)));
+        
+INSERT INTO fasesprojecte VALUES (FasesProj(TO_DATE('2022-01-01', 'YYYY-MM-DD'), null,(SELECT REF(pd) FROM projectesdesenv pd WHERE pd.idProjecte = 100443),(SELECT REF(f) FROM fases f WHERE f.idFase = 2)));
 
-INSERT INTO fasesprojecte VALUES (FasesProj(TO_DATE('2022-01-01', 'YYYY-MM-DD'), null,
-        (SELECT REF(pd) FROM projectesdesenv pd WHERE pd.idProjecte = 100442),
-        (SELECT REF(f) FROM fases f WHERE f.idFase = 2)));
+INSERT INTO fasesprojecte VALUES (FasesProj(TO_DATE('2022-01-01', 'YYYY-MM-DD'), null,(SELECT REF(pd) FROM projectesdesenv pd WHERE pd.idProjecte = 100444),(SELECT REF(f) FROM fases f WHERE f.idFase = 2)));
 
 
 -------------------------------------------------------------------------------------------------------------
@@ -188,6 +250,7 @@ BEGIN
       RETURN 'Sense director assignat';
     END director;
 END;
+/
 --• El mètode acceptat() torna cert (T) si existeix un objecte en la taula d'objectes ProjDesenv corresponent al mateix «id» de projecte.
 CREATE OR REPLACE TYPE BODY ProjEstudi AS
   MEMBER FUNCTION acceptat RETURN CHAR IS
@@ -206,6 +269,7 @@ CREATE OR REPLACE TYPE BODY ProjEstudi AS
     END IF;
   END acceptat;
 END;
+/
 --• El mètode faseActual() torna el nom de la fase del projecte en desenvolupament que tingui dataFi=null en la taula FasesProj
 CREATE OR REPLACE TYPE BODY ProjDesenv AS
   MEMBER FUNCTION faseActual RETURN VARCHAR2 IS
@@ -222,7 +286,7 @@ CREATE OR REPLACE TYPE BODY ProjDesenv AS
       RETURN 'Sense fase activa';
   END faseActual;
 END;
-
+/
 
 --• El mètode numProj() de client compta quants projectes té el client.
 CREATE OR REPLACE TYPE BODY Client AS
@@ -239,6 +303,7 @@ CREATE OR REPLACE TYPE BODY Client AS
     RETURN contarprojclient;
   END numProj;
 END;
+/
 
 --• El mètode numProj() de fase compta quants projectes hi ha en una fase.
 CREATE OR REPLACE TYPE BODY Fase AS
@@ -254,7 +319,7 @@ CREATE OR REPLACE TYPE BODY Fase AS
     RETURN contarprojfase;
   END numProj;
 END;
-
+/
 
 --• El mètode numProjDir() d’empleat compta quants projectes dirigeix un empleat.
 --• El mètode numProjTreb() d’empleat compta en quants projectes està treballant un empleat.
@@ -291,7 +356,7 @@ CREATE OR REPLACE TYPE BODY Empleat AS
     RETURN anysantiguitat;
     end antiguitat;
 END;
-
+/
 
 -------------------------------------------------------------------------------------------------------------
 --4. Consulteu els atributs i les funcions membre de cada classe. Comprovant que totes les funcions membre funcionen correctament.
@@ -307,7 +372,7 @@ SELECT c.nom, c.numProj() AS numProj FROM clientes c;
 --Comprobar metodo numProj de fases
 SELECT f.nom, f.numProj() AS numProj FROM fases f;
 --Comprobar 3 metodos empleados (mirar como comprobar)
-SELECT e.numProjDir() AS numProjDir FROM empleats e;
-
+--SELECT e.numProjDir() AS numProjDir FROM empleats e;
+--SELECT e.numProjDir(), e.numProjTreb(), e.antiguitat() FROM empleats e;
 
 
