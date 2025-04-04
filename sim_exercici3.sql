@@ -270,6 +270,41 @@ CREATE OR REPLACE TYPE BODY ProjEstudi AS
   END acceptat;
 END;
 /
+
+--• El mètode numProjDir() d’empleat compta quants projectes dirigeix un empleat.
+--• El mètode numProjTreb() d’empleat compta en quants projectes està treballant un empleat.
+--• El mètode antiguitat() de Empleat ha de calcular la diferència en anys entre la data del sistema (sysdate) i la data de contracte (dataContracte), amb extract(year from data) es pot extreure l’any d’una data, si en lloc d’una data poseu sysdate, obtindreu l’any actual.
+--3en1:
+CREATE OR REPLACE TYPE BODY Empleat AS
+  MEMBER FUNCTION numProjDir RETURN NUMERIC IS
+    num NUMBER;
+  BEGIN
+    SELECT COUNT(*) INTO num
+    FROM dirigeixen d
+    WHERE d.refEmpleat = (
+      SELECT REF(e) FROM empleats e WHERE e.dni = self.dni
+    );
+    RETURN num;
+  END;
+
+  MEMBER FUNCTION numProjTreb RETURN NUMERIC IS
+    num NUMBER;
+  BEGIN
+    SELECT COUNT(*) INTO num
+    FROM treballen t
+    WHERE t.refEmpleat = (
+      SELECT REF(e) FROM empleats e WHERE e.dni = self.dni
+    );
+    RETURN num;
+  END;
+
+  MEMBER FUNCTION antiguitat RETURN NUMERIC IS
+  BEGIN
+    RETURN EXTRACT(YEAR FROM SYSDATE) - EXTRACT(YEAR FROM datacontracte);
+  END;
+END;
+/
+
 --• El mètode faseActual() torna el nom de la fase del projecte en desenvolupament que tingui dataFi=null en la taula FasesProj
 CREATE OR REPLACE TYPE BODY ProjDesenv AS
   MEMBER FUNCTION faseActual RETURN VARCHAR2 IS
@@ -321,42 +356,7 @@ CREATE OR REPLACE TYPE BODY Fase AS
 END;
 /
 
---• El mètode numProjDir() d’empleat compta quants projectes dirigeix un empleat.
---• El mètode numProjTreb() d’empleat compta en quants projectes està treballant un empleat.
---• El mètode antiguitat() de Empleat ha de calcular la diferència en anys entre la data del sistema (sysdate) i la data de contracte (dataContracte), amb extract(year from data) es pot extreure l’any d’una data, si en lloc d’una data poseu sysdate, obtindreu l’any actual.
---3en1:
-CREATE OR REPLACE TYPE BODY Empleat AS
-  MEMBER FUNCTION numProjDir RETURN NUMERIC IS
-    contarprojdir NUMBER;
-  BEGIN
-    
-    SELECT COUNT(*)
-    INTO contarprojdir
-    FROM dirigeixen d
-    WHERE DEREF(d.refEmpleat) = REF(self);
-    
-    RETURN contarprojdir;
-  END numProjDir;
-    MEMBER FUNCTION numProjTreb RETURN NUMERIC IS
-    contarprojtreb NUMBER;
-  BEGIN
-    
-    SELECT COUNT(*)
-    INTO contarprojtreb
-    FROM treballen t
-    WHERE DEREF(t.refEmpleat) = REF(self);
-    
-    RETURN contarprojtreb;
-  END numProjTreb;
-  
-  MEMBER FUNCTION antiguitat RETURN NUMERIC IS
-     anysantiguitat NUMBER;
-  BEGIN
-    anysantiguitat := EXTRACT(YEAR FROM SYSDATE) - EXTRACT(YEAR FROM datacontracte);
-    RETURN anysantiguitat;
-    end antiguitat;
-END;
-/
+
 
 -------------------------------------------------------------------------------------------------------------
 --4. Consulteu els atributs i les funcions membre de cada classe. Comprovant que totes les funcions membre funcionen correctament.
@@ -373,6 +373,6 @@ SELECT c.nom, c.numProj() AS numProj FROM clientes c;
 SELECT f.nom, f.numProj() AS numProj FROM fases f;
 --Comprobar 3 metodos empleados (mirar como comprobar)
 --SELECT e.numProjDir() AS numProjDir FROM empleats e;
---SELECT e.numProjDir(), e.numProjTreb(), e.antiguitat() FROM empleats e;
+SELECT e.numProjDir(), e.numProjTreb(), e.antiguitat() FROM empleats e;
 
 
