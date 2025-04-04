@@ -52,7 +52,7 @@ CREATE OR REPLACE TYPE Fase AS OBJECT (
   idFase NUMERIC(2),
   nom VARCHAR2(50),
   tipusEmp VARCHAR2(30),
-  MEMBER FUNCTION numProj RETURN NUMERIC 
+  MEMBER FUNCTION numProj RETURN NUMBER
 ) NOT FINAL;
 
 
@@ -143,9 +143,9 @@ CREATE TABLE fasesprojecte OF FasesProj;
 --• Inseriu algunes files de dades en cada taula.
 INSERT INTO clientes VALUES (Client('123456789', 'Juan', 'Pérez', 'Carrer de la Pau 10', '987654321'));
 
-INSERT INTO projectes VALUES (Projecte(100441, 'Projecte A', 'Desenvolupament de software', (SELECT REF(C) FROM clientes c WHERE c.nif = '123456789')));
+INSERT INTO projectes VALUES (Projecte(100442, 'Projecte B', 'Desenvolupament de software', (SELECT REF(C) FROM clientes c WHERE c.nif = '123456789')));
 
-INSERT INTO empleats VALUES (Empleat('111111111', 'Carlos', 'Martínez', 'Carrer de la Vaca 15', '612345678', TO_DATE('2022-01-15', 'YYYY-MM-DD')));
+INSERT INTO empleats VALUES (Empleat('141111121', 'Lucas', 'Gonzalez', 'Carrer de la Vaca 15', '612345678', TO_DATE('2020-08-15', 'YYYY-MM-DD')));
 
 INSERT INTO analistes VALUES (Analista('111111111', 'Carlos', 'Martínez', 'Carrer de la Vaca 15', '612345678', TO_DATE('2022-01-15', 'YYYY-MM-DD'), TO_DATE('2022-01-15', 'YYYY-MM-DD'), 'D001'));
 
@@ -153,32 +153,161 @@ INSERT INTO programadors VALUES (Programador('444444444', 'David', 'Sánchez', '
 
 INSERT INTO tecnics VALUES (Tecnic('666666666', 'Jordi', 'Hernández', 'Carrer de la Rosa 11', '612345683', TO_DATE('2018-07-19', 'YYYY-MM-DD'), 'Enginyer en Informàtica'));
 
-INSERT INTO projectesdesenv VALUES (ProjDesenv(100441, 'Projecte A', 'Desenvolupament de software', (SELECT REF(C) FROM clientes c WHERE c.nif = '123456789'), TO_DATE('2022-01-01', 'YYYY-MM-DD'), TO_DATE('2022-12-31', 'YYYY-MM-DD')));
+INSERT INTO projectesdesenv VALUES (ProjDesenv(100443, 'Projecte A', 'Desenvolupament de software', (SELECT REF(C) FROM clientes c WHERE c.nif = '123456789'), TO_DATE('2022-01-01', 'YYYY-MM-DD'), null));
 
-INSERT INTO projectesestudi VALUES (ProjEstudi(100441, 'Projecte A', 'Desenvolupament de software', (SELECT REF(C) FROM clientes c WHERE c.nif = '123456789'), 5000.00, 12));
+INSERT INTO projectesestudi VALUES (ProjEstudi(100442, 'Projecte B', 'Desenvolupament de software', (SELECT REF(C) FROM clientes c WHERE c.nif = '123456789'), 5000.00, 12));
 
-INSERT INTO fases VALUES (Fase(1, 'Planificació', 'Analista'));
+INSERT INTO fases VALUES (Fase(2, 'Execució', 'Analista'));
 
-INSERT INTO dirigeixen VALUES (Dirigeix((SELECT REF(p) FROM projectes p WHERE p.idProjecte = 1001), (SELECT REF(e) FROM empleats e WHERE e.dni = '111111111')));
+INSERT INTO dirigeixen VALUES (Dirigeix((SELECT REF(p) FROM projectes p WHERE p.idProjecte = 100441), (SELECT REF(e) FROM empleats e WHERE e.dni = '111111111')));
 
 INSERT INTO treballen VALUES (Treballa((SELECT REF(p) FROM projectes p WHERE p.idProjecte = 1001), (SELECT REF(e) FROM empleats e WHERE e.dni = '111111111')));
 
 
-INSERT INTO fasesprojecte VALUES (FasesProj(TO_DATE('2022-01-01', 'YYYY-MM-DD'), TO_DATE('2022-12-31', 'YYYY-MM-DD'),
-        (SELECT REF(pd) FROM projectesdesenv pd WHERE pd.idProjecte = 1001),
-        (SELECT REF(f) FROM fases f WHERE f.idFase = 1)));
+INSERT INTO fasesprojecte VALUES (FasesProj(TO_DATE('2022-01-01', 'YYYY-MM-DD'), null,
+        (SELECT REF(pd) FROM projectesdesenv pd WHERE pd.idProjecte = 100442),
+        (SELECT REF(f) FROM fases f WHERE f.idFase = 2)));
 
 
 -------------------------------------------------------------------------------------------------------------
 --3. Implementeu els mètodes de les classes amb CREATE OR REPLACE TYPE BODY
---• El mètode director() de Projecte mostrarà el nom i cognoms del directori del projecte. Cal concatenar els diferents valors en una cadena de text (varchar) amb ||
---• El mètode antiguitat() de Empleat ha de calcular la diferència en anys entre la data del sistema (sysdate) i la data de contracte (dataContracte), amb extract(year from data) es pot extreure l’any d’una data, si en lloc d’una data poseu sysdate, obtindreu l’any actual.
+--• El mètode director() de Projecte mostrarà el nom i cognoms del director del projecte. Cal concatenar els diferents valors en una cadena de text (varchar) amb ||
+CREATE OR REPLACE TYPE BODY Projecte AS 
+MEMBER FUNCTION director RETURN VARCHAR2 IS
+nomDirector VARCHAR2(25);
+cognomDirector VARCHAR2(25);
+BEGIN
+    SELECT e.nom, e.cognoms
+    INTO nomDirector, cognomDirector
+    FROM empleats e
+    WHERE REF(e) IN (SELECT refEmpleat FROM dirigeixen d WHERE DEREF(d.refProjecte).idProjecte = self.idProjecte);
+    
+    RETURN 'DirProj: ' || nomDirector || ' ' || cognomDirector;
+      EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+      RETURN 'Sense director assignat';
+    END director;
+END;
 --• El mètode acceptat() torna cert (T) si existeix un objecte en la taula d'objectes ProjDesenv corresponent al mateix «id» de projecte.
+CREATE OR REPLACE TYPE BODY ProjEstudi AS
+  MEMBER FUNCTION acceptat RETURN CHAR IS
+  existeProj NUMBER;
+   BEGIN
+    -- Verifica si existe un proyecto con el mismo idProjecte en la tabla ProjDesenv
+    SELECT COUNT(*)
+    INTO existeProj
+    FROM ProjectesEstudi pe
+    WHERE pe.idProjecte = self.idProjecte;
+    
+    IF existeProj > 0 THEN
+      RETURN 'T';  
+    ELSE
+      RETURN 'F'; 
+    END IF;
+  END acceptat;
+END;
 --• El mètode faseActual() torna el nom de la fase del projecte en desenvolupament que tingui dataFi=null en la taula FasesProj
+CREATE OR REPLACE TYPE BODY ProjDesenv AS
+  MEMBER FUNCTION faseActual RETURN VARCHAR2 IS
+  nomFase VARCHAR2(50);
+  BEGIN
+    SELECT f.nom
+    INTO nomFase
+    FROM FasesProjecte fp
+    JOIN Fases f ON fp.refFase = REF(f)
+    WHERE fp.refProjDesenv.idProjecte = self.idProjecte AND fp.dataFi IS NULL;
+    RETURN 'Fase actual: ' || nomFase;
+  EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+      RETURN 'Sense fase activa';
+  END faseActual;
+END;
+
+
 --• El mètode numProj() de client compta quants projectes té el client.
+CREATE OR REPLACE TYPE BODY Client AS
+  MEMBER FUNCTION numProj RETURN NUMBER IS
+    contarprojclient NUMBER;
+  BEGIN
+
+
+    SELECT COUNT(*) 
+    INTO contarprojclient
+    FROM projectes p
+    WHERE p.nomclient = (SELECT REF(c) FROM clientes c WHERE c.nif = self.nif);
+    
+    RETURN contarprojclient;
+  END numProj;
+END;
+
 --• El mètode numProj() de fase compta quants projectes hi ha en una fase.
+CREATE OR REPLACE TYPE BODY Fase AS
+  MEMBER FUNCTION numProj RETURN NUMBER IS
+    contarprojfase NUMBER;
+  BEGIN
+    
+    SELECT COUNT(*) 
+    INTO contarprojfase
+    FROM fasesprojecte p
+    WHERE p.reffase = (SELECT REF(f) FROM fases f WHERE f.nom = self.nom);
+    
+    RETURN contarprojfase;
+  END numProj;
+END;
+
+
 --• El mètode numProjDir() d’empleat compta quants projectes dirigeix un empleat.
---• El mètode numProjDir() d’empleat compta en quants projectes està treballant un empleat.
+--• El mètode numProjTreb() d’empleat compta en quants projectes està treballant un empleat.
+--• El mètode antiguitat() de Empleat ha de calcular la diferència en anys entre la data del sistema (sysdate) i la data de contracte (dataContracte), amb extract(year from data) es pot extreure l’any d’una data, si en lloc d’una data poseu sysdate, obtindreu l’any actual.
+--3en1:
+CREATE OR REPLACE TYPE BODY Empleat AS
+  MEMBER FUNCTION numProjDir RETURN NUMERIC IS
+    contarprojdir NUMBER;
+  BEGIN
+    
+    SELECT COUNT(*)
+    INTO contarprojdir
+    FROM dirigeixen d
+    WHERE DEREF(d.refEmpleat) = REF(self);
+    
+    RETURN contarprojdir;
+  END numProjDir;
+    MEMBER FUNCTION numProjTreb RETURN NUMERIC IS
+    contarprojtreb NUMBER;
+  BEGIN
+    
+    SELECT COUNT(*)
+    INTO contarprojtreb
+    FROM treballen t
+    WHERE DEREF(t.refEmpleat) = REF(self);
+    
+    RETURN contarprojtreb;
+  END numProjTreb;
+  
+  MEMBER FUNCTION antiguitat RETURN NUMERIC IS
+     anysantiguitat NUMBER;
+  BEGIN
+    anysantiguitat := EXTRACT(YEAR FROM SYSDATE) - EXTRACT(YEAR FROM datacontracte);
+    RETURN anysantiguitat;
+    end antiguitat;
+END;
+
 
 -------------------------------------------------------------------------------------------------------------
 --4. Consulteu els atributs i les funcions membre de cada classe. Comprovant que totes les funcions membre funcionen correctament.
+--Comprobar metodo director
+SELECT p.nom, p.director() AS director FROM projectes p;
+--Comprobar metodo faseactual
+SELECT pd.idProjecte, pd.nom, pd.faseActual() AS fase_actual FROM ProjectesDesenv pd;
+--Comprobar metodo acceptat 
+SELECT pd.idProjecte, pd.acceptat() AS ProyectoAceptado FROM ProjectesEstudi pd;
+
+--Comprobar metodo numProj de clientes
+SELECT c.nom, c.numProj() AS numProj FROM clientes c;
+--Comprobar metodo numProj de fases
+SELECT f.nom, f.numProj() AS numProj FROM fases f;
+--Comprobar 3 metodos empleados (mirar como comprobar)
+SELECT e.numProjDir() AS numProjDir FROM empleats e;
+
+
+
