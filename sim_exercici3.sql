@@ -1,36 +1,31 @@
 --1. Definiu en primer lloc tots els "type" necessaris amb CREATE OR REPLACE TYPE
 --• Definiu un type per cada classe
-/*BEGIN
-   EXECUTE IMMEDIATE 'DROP TYPE Analista';
-   EXECUTE IMMEDIATE 'DROP TYPE Client';
-   EXECUTE IMMEDIATE 'DROP TYPE Dirigeix';
-   EXECUTE IMMEDIATE 'DROP TYPE Empleat';
-   EXECUTE IMMEDIATE 'DROP TYPE Fase';
-   EXECUTE IMMEDIATE 'DROP TYPE FasesProj';
-   EXECUTE IMMEDIATE 'DROP TYPE Programador';
-   EXECUTE IMMEDIATE 'DROP TYPE ProjDesenv';
-   EXECUTE IMMEDIATE 'DROP TYPE Projecte';
-   EXECUTE IMMEDIATE 'DROP TYPE ProjEstudi';
-   EXECUTE IMMEDIATE 'DROP TYPE Tecnic';
-   EXECUTE IMMEDIATE 'DROP TYPE Treballa';
-    EXECUTE IMMEDIATE 'DROP TABLE analistes';
-    EXECUTE IMMEDIATE 'DROP TABLE clientes';
-    EXECUTE IMMEDIATE 'DROP TABLE dirigeixen';
-    EXECUTE IMMEDIATE 'DROP TABLE empleats';
-    EXECUTE IMMEDIATE 'DROP TABLE fases';
-    EXECUTE IMMEDIATE 'DROP TABLE fasesprojecte';
-    EXECUTE IMMEDIATE 'DROP TABLE programadors';
-    EXECUTE IMMEDIATE 'DROP TABLE projectes';
-    EXECUTE IMMEDIATE 'DROP TABLE projectesdesenv';
-    EXECUTE IMMEDIATE 'DROP TABLE projectesestudi';
-    EXECUTE IMMEDIATE 'DROP TABLE tecnics';
-    EXECUTE IMMEDIATE 'DROP TABLE treballen';                      
+-- ELIMINACIÓ DE TOTS ELS OBJECTES (FORÇAT AMB FORCE I PURGE)
+/*DROP TABLE fasesprojecte PURGE;
+DROP TABLE treballen PURGE;
+DROP TABLE dirigeixen PURGE;
+DROP TABLE fases PURGE;
+DROP TABLE projectesestudi PURGE;
+DROP TABLE projectesdesenv PURGE;
+DROP TABLE tecnics PURGE;
+DROP TABLE programadors PURGE;
+DROP TABLE analistes PURGE;
+DROP TABLE empleats PURGE;
+DROP TABLE projectes PURGE;
+DROP TABLE clientes PURGE;
 
-   
-EXCEPTION
-   WHEN OTHERS THEN NULL; -- Ignorar errores si los objetos no existen
-END;
-*/
+DROP TYPE FasesProj FORCE;
+DROP TYPE Treballa FORCE;
+DROP TYPE Dirigeix FORCE;
+DROP TYPE Fase FORCE;
+DROP TYPE ProjEstudi FORCE;
+DROP TYPE ProjDesenv FORCE;
+DROP TYPE Tecnic FORCE;
+DROP TYPE Programador FORCE;
+DROP TYPE Analista FORCE;
+DROP TYPE Empleat FORCE;
+DROP TYPE Projecte FORCE;
+DROP TYPE Client FORCE;*/
 --Type Client:
 CREATE OR REPLACE TYPE Client AS OBJECT (
   nif char(9),
