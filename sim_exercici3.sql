@@ -1,5 +1,6 @@
---1. Definiu en primer lloc tots els "type" necessaris amb CREATE OR REPLACE TYPE
---• Definiu un type per cada classe
+-- Tema 2 Base de Datos - Ejercicio 3
+-- Autors: Rafa Oliver, Dani Pérez y Dani Jan
+
 -- ELIMINACIÓ DE TOTS ELS OBJECTES (FORÇAT AMB FORCE I PURGE)
 /*DROP TABLE fasesprojecte PURGE;
 DROP TABLE treballen PURGE;
@@ -26,6 +27,9 @@ DROP TYPE Analista FORCE;
 DROP TYPE Empleat FORCE;
 DROP TYPE Projecte FORCE;
 DROP TYPE Client FORCE;*/
+
+--1. Definiu en primer lloc tots els "type" necessaris amb CREATE OR REPLACE TYPE
+--• Definiu un type per cada classe
 --Type Client:
 CREATE OR REPLACE TYPE Client AS OBJECT (
   nif char(9),
@@ -132,7 +136,6 @@ CREATE OR REPLACE TYPE Tecnic UNDER Empleat (
 ) NOT FINAL;
 /
 
--- DEFINIR LOS METODOS ESTÁN HECHOS EN EL PUNTO 3!!
 -------------------------------------------------------------------------------------------------------------
 --2. Creeu taules per a objectes
 --• Creeu taules per a totes les classes.
@@ -269,7 +272,6 @@ END;
 --• El mètode numProjDir() d’empleat compta quants projectes dirigeix un empleat.
 --• El mètode numProjTreb() d’empleat compta en quants projectes està treballant un empleat.
 --• El mètode antiguitat() de Empleat ha de calcular la diferència en anys entre la data del sistema (sysdate) i la data de contracte (dataContracte), amb extract(year from data) es pot extreure l’any d’una data, si en lloc d’una data poseu sysdate, obtindreu l’any actual.
---3en1:
 CREATE OR REPLACE TYPE BODY Empleat AS
   MEMBER FUNCTION numProjDir RETURN NUMERIC IS
     num NUMBER;
@@ -324,7 +326,6 @@ CREATE OR REPLACE TYPE BODY Client AS
     contarprojclient NUMBER;
   BEGIN
 
-
     SELECT COUNT(*) 
     INTO contarprojclient
     FROM projectes p
@@ -351,23 +352,24 @@ CREATE OR REPLACE TYPE BODY Fase AS
 END;
 /
 
-
-
 -------------------------------------------------------------------------------------------------------------
 --4. Consulteu els atributs i les funcions membre de cada classe. Comprovant que totes les funcions membre funcionen correctament.
---Comprobar metodo director
+--Comprobar método director()
 SELECT p.nom, p.director() AS director FROM projectes p;
---Comprobar metodo faseactual
+
+--Comprobar método faseactual()
 SELECT pd.idProjecte, pd.nom, pd.faseActual() AS fase_actual FROM ProjectesDesenv pd;
---Comprobar metodo acceptat 
+
+--Comprobar método acceptat()
 SELECT pd.idProjecte, pd.acceptat() AS ProyectoAceptado FROM ProjectesEstudi pd;
 
---Comprobar metodo numProj de clientes
+--Comprobar método numProj() de clientes
 SELECT c.nom, c.numProj() AS numProj FROM clientes c;
---Comprobar metodo numProj de fases
+
+--Comprobar método numProj() de fases
 SELECT f.nom, f.numProj() AS numProj FROM fases f;
---Comprobar 3 metodos empleados (mirar como comprobar)
---SELECT e.numProjDir() AS numProjDir FROM empleats e;
+
+--Comprobar 3 métodos de empleados
 SELECT e.numProjDir(), e.numProjTreb(), e.antiguitat() FROM empleats e;
 
 

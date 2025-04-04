@@ -1,5 +1,5 @@
 -- Tema 2 Base de Datos - Ejercicio 1
--- Autors: Rafa Oliver, Dani pérez y Dani Jan
+-- Autors: Rafa Oliver, Dani Pérez y Dani Jan
 
 -------------------------------------------
 -- 1. Eliminación previa de objetos (opcional)
